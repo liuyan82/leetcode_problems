@@ -21,6 +21,10 @@ using namespace std;
 class Solution {
 public:
     string longestPalindrome(const string &s) const {
+        return dpAlgorithm(s);
+    }
+private:
+    string wildSolution(const string &s) const {
         int longestStart = -1, longestEnd = -1;
         for (int end = s.size() - 1; end >= 0; --end) {
             if (longestEnd - longestStart + 1 > end + 1) {
@@ -68,6 +72,54 @@ public:
         }
     }
 private:
+    inline string dpAlgorithm(const string &str) const {
+        unsigned char *dp = new unsigned char[str.size() * str.size()];
+        int currentLongestStart = 0;
+        int currentLongestLen = 0;
+        for (int len = 1; len <= str.size(); ++len) {
+            for (int s = 0; s <= str.size() - len; ++s) {
+                int e = s + len - 1;
+                cout << "calc dp[" << s <<"][" << e << "]" << endl;
+                if (len == 1) {
+                    // 一个字符的子串肯定是回文
+                    dp[s * str.size() + e] = 1;
+                    cout << "dp[" << s <<"][" << e << "] = 1" << endl;
+                    if (currentLongestLen < len) {
+                        currentLongestStart = s;
+                        currentLongestLen = len;
+                    }
+                } else if (len == 2){
+                    if (str[s] == str[e]) {
+                        if (currentLongestLen < len) {
+                            currentLongestStart = s;
+                            currentLongestLen = len;
+                        }
+                        dp[s * str.size() + e] = 1;
+                        cout << "dp[" << s <<"][" << e << "] = 1" << endl;
+                    } else {
+                        dp[s * str.size() + e] = 0;
+                        cout << "dp[" << s <<"][" << e << "] = 0" << endl;
+                    }
+
+                } else {
+                    cout << "dp[" << s + 1 << "][" << e - 1 << "] = " << (int)(dp[(s + 1) * str.size() + e - 1]) << endl;
+                    cout << "str[" << s << "]=" << str[s] << ", str[" << e << "]=" << str[e] << endl;
+                    if (dp[(s + 1) * str.size() + e - 1] == 1 && str[s] == str[e]) {
+                        dp[s * str.size() + e] = 1;
+                        cout << "dp[" << s <<"][" << e << "] = 1" << endl;
+                        if (currentLongestLen < len) {
+                            currentLongestStart = s;
+                            currentLongestLen = len;
+                        }
+                    } else {
+                        dp[s * str.size() + e] = 0;
+                        cout << "dp[" << s <<"][" << e << "] = 0" << endl;
+                    }
+                }
+            }
+        }
+        return str.substr(currentLongestStart, currentLongestLen);
+    }
 };
 
 int main(int argc, const char** argv) {
