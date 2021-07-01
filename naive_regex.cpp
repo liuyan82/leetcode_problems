@@ -132,10 +132,12 @@ class Solution {
             startStates.insert(0);
             startStates.insert(1);
             char chLast = '\0';
-            int lastState = 0;
-            char chLastBeforeStar = '\0';
+            std::vector<std::pair<int, char> > transparentList;
+            bool lastRuleIsStar = false;
             // for now ,not support '\' escape
+            int curPos = -1;
             for (char ch : regex) {
+                curPos += 1;
                 if (chLast == '\0') {
                     chLast = ch;
                     continue;
@@ -148,9 +150,9 @@ class Solution {
                             }
                             int iNewState = state + 1;
                             machine.addRule(state, chLast, iNewState);
-                            lastState = state;
+                            transparentList.clear();
+                            transparentList.push_back(std::pair<int, char>(state, chLast));
                             state = iNewState;
-                            chLastBeforeStar = chLast;
                         }
                         break;
                     }
@@ -162,21 +164,25 @@ class Solution {
                         machine.addRule(state, chLast, state);
                         int newState = state + 1;
                         machine.addRule(state, chLast, newState);
-                        if (chLastBeforeStar == '\0') {
+                        if (transparentList.empty()) {
                                 startStates.insert(newState);
                         } 
                         else {
-                            for (int i = lastState; i < state; ++i) {
-                               char transChar;
-                               if (chLastBeforeStar == '.') {
-                                   transChar = FiniteStateMachine<char>::sChAny;
-                               } else {
-                                    transChar = chLastBeforeStar;
-                               }
-                                machine.addRule(i, transChar, newState);
+                            for (auto stateCharPair : transparentList) {
+                                for (int i = stateCharPair.first; i < state; ++i) {
+                                    char transChar;
+                                    if (stateCharPair.second == '.') {
+                                        transChar = FiniteStateMachine<char>::sChAny;
+                                    } else {
+                                        transChar = stateCharPair.second;
+                                    }
+                                    machine.addRule(i, transChar, newState);
+                                }
                             }
                         }
+                        transparentList.push_back(std::pair<int, char>(state, chLast));
                         state = newState;
+                        lastRuleIsStar = true;
 
                         break;
                     }
@@ -188,9 +194,9 @@ class Solution {
                             }
                             int iNewState = state + 1;
                             machine.addRule(state, chLast, iNewState);
-                            lastState = state;
+                            transparentList.clear();
+                            transparentList.push_back(std::pair<int, char>(state, chLast));
                             state = iNewState;
-                            chLastBeforeStar = chLast;
                         }
                         break;
                     }
@@ -218,5 +224,10 @@ int main(int argc, const char ** argv) {
     Solution sol;
     bool matches = sol.match("bbbba", ".*a*a");
     std::cout << matches << std::endl;
+
+
+    matches = sol.match("aaba", "ab*a*c*a");
+    std::cout << matches << std::endl;
+
     return 0;
 }
