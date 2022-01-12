@@ -125,7 +125,19 @@ class Solution {
         
 
     private:
+
+        void clearTransparentList(std::vector<std::pair<int, char> > &transparentList) const {
+            std::cout<< "clear transparent list" << std::endl;
+            transparentList.clear();
+        }
+
+        void addTransparentList(std::vector<std::pair<int, char> > &transparentList, int state, char ch) const {
+            std::cout<< "add transparent list(" << state << ", " << ch << ')' << std::endl;
+            transparentList.push_back(std::pair<int, char>(state, ch));
+        }
+
         FiniteStateMachine<char> compile(const std::string &regex) const {
+            std::cout << "-----begin compile \\" << regex << "\\ ---------" << std::endl;
             FiniteStateMachine<char> machine;
             int state = 1;
             std::set<int> startStates;
@@ -134,9 +146,12 @@ class Solution {
             char chLast = '\0';
             std::vector<std::pair<int, char> > transparentList;
             bool lastRuleIsStar = false;
+            bool hasNoStarRule = false;
             // for now ,not support '\' escape
             int curPos = -1;
             for (char ch : regex) {
+                
+                std::cout << "add rule for " << ch << std::endl;
                 curPos += 1;
                 if (chLast == '\0') {
                     chLast = ch;
@@ -145,13 +160,14 @@ class Solution {
                 switch (ch) {
                     case '.': {
                         if (chLast != '*') {
+                            hasNoStarRule = true;;
                             if (chLast == '.') {
                                 chLast = FiniteStateMachine<char>::sChAny;
                             }
                             int iNewState = state + 1;
                             machine.addRule(state, chLast, iNewState);
-                            transparentList.clear();
-                            transparentList.push_back(std::pair<int, char>(state, chLast));
+                            clearTransparentList(transparentList);
+                            addTransparentList(transparentList, state, chLast);
                             state = iNewState;
                         }
                         break;
@@ -164,23 +180,31 @@ class Solution {
                         machine.addRule(state, chLast, state);
                         int newState = state + 1;
                         machine.addRule(state, chLast, newState);
-                        if (transparentList.empty()) {
-                                startStates.insert(newState);
+                        if (!hasNoStarRule) {
+                            startStates.insert(newState);
                         } 
-                        else {
                             for (auto stateCharPair : transparentList) {
-                                for (int i = stateCharPair.first; i < state; ++i) {
-                                    char transChar;
-                                    if (stateCharPair.second == '.') {
-                                        transChar = FiniteStateMachine<char>::sChAny;
-                                    } else {
-                                        transChar = stateCharPair.second;
-                                    }
-                                    machine.addRule(i, transChar, newState);
+                                //for (int i = stateCharPair.first; i < state; ++i) {
+                                //    char transChar;
+                                //    if (stateCharPair.second == '.') {
+                                //        transChar = FiniteStateMachine<char>::sChAny;
+                                //    } else {
+                                //        transChar = stateCharPair.second;
+                                //    }
+                                //    std::cout << "add transparent transfer rule: (" << i << ", " << transChar << ')' << std::endl;
+                                //    machine.addRule(i, transChar, newState);
+                                //}
+                                char transChar;
+                                if (stateCharPair.second == '.') {
+                                    transChar = FiniteStateMachine<char>::sChAny;
+                                } else {
+                                    transChar = stateCharPair.second;
                                 }
+                                std::cout << "add transparent transfer rule: (" << stateCharPair.first << ", " << transChar << ')' << std::endl;
+                                machine.addRule(stateCharPair.first, transChar, newState);
+
                             }
-                        }
-                        transparentList.push_back(std::pair<int, char>(state, chLast));
+                        addTransparentList(transparentList, state, chLast);
                         state = newState;
                         lastRuleIsStar = true;
 
@@ -189,13 +213,14 @@ class Solution {
 
                     default: {
                         if (chLast != '*') {
+                            hasNoStarRule = true;;
                             if (chLast == '.') {
                                 chLast = FiniteStateMachine<char>::sChAny;
                             }
                             int iNewState = state + 1;
                             machine.addRule(state, chLast, iNewState);
-                            transparentList.clear();
-                            transparentList.push_back(std::pair<int, char>(state, chLast));
+                            clearTransparentList(transparentList);
+                            addTransparentList(transparentList, state, chLast);
                             state = iNewState;
                         }
                         break;
@@ -215,6 +240,7 @@ class Solution {
             }
             machine.setSucc(state);
             machine.setStart(startStates);
+            std::cout << "-----end compile \\" << regex << "\\ ---------" << std::endl;
             return std::move(machine);
         }
 
@@ -222,11 +248,24 @@ class Solution {
 
 int main(int argc, const char ** argv) {
     Solution sol;
-    bool matches = sol.match("bbbba", ".*a*a");
-    std::cout << matches << std::endl;
+    bool matches;
+    //matches = sol.match("bbbba", ".*a*a");
+    //std::cout << matches << std::endl;
 
 
     matches = sol.match("aaba", "ab*a*c*a");
+    std::cout << matches << std::endl;
+
+    //matches = sol.match("aab", "ab*a*c*");
+    //std::cout << matches << std::endl;
+
+    matches = sol.match("aaabaaaababcbccbaab", "c*c*.*c*a*..*c*");
+    std::cout << matches << std::endl;
+
+    //matches = sol.match("c", "c*c*.");
+    //std::cout << matches << std::endl;
+
+    matches = sol.match("bbbba", ".*a*a");
     std::cout << matches << std::endl;
 
     return 0;
