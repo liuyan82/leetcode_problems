@@ -35,7 +35,29 @@
 class Solution {
 public:
     int threeSumClosest(std::vector<int>& nums, int target) {
+        for (auto it = nums.begin(); it != nums.end(); ++it) {
+            *it = *it - target;
+        }
         std::sort(nums.begin(), nums.end());
+
+        int sum = target * 3;
+        if (nums.front() >= 0) {
+            return sum + nums[0] + nums[1] + nums[2];
+        } else if (nums.back() <= 0) {
+            int i = 0;
+            for (auto it = nums.rbegin(); it != nums.rend(), i < 3; ++it, ++i) {
+                sum += *it;
+            }
+            return sum;
+        } else {
+            int closest = 2147483647;
+            auto it1 = nums.begin();
+            auto it2 = nums.rbegin();
+            for (; *it1 < 0, *it2 > 0; ) {
+                if (*it1 < -*it2) {
+                }
+            }
+        }
 
     }
 };
