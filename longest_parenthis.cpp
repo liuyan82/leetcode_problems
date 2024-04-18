@@ -62,7 +62,6 @@ public:
                     int left_pos = unmatched_left_pos.front();
                     std::cout << i << " match " << left_pos << std::endl;
                     unmatched_left_pos.pop_front();
-                    matched_left_pos.push_back(left_pos);
 
                     // 回溯
                     for (;left_pos > 0;) {
@@ -75,6 +74,8 @@ public:
                             break;
                         }
                     }
+                    // 这里回溯完再写回left_pos，会加速后面的回溯
+                    matched_left_pos.push_back(left_pos);
                     if (i - left_pos + 1 > max_length) {
                         max_length = i - left_pos + 1;
                     }
